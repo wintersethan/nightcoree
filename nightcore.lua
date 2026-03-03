@@ -1904,8 +1904,8 @@ shot_logger.render = function()
             local y = sy * 0.62 + y_offset
             local alpha = (container_col[4] or 185) * fade
 
-            render.rec(x, y, tw + pad * 2, th + pad * 2, 6, container_col[1], container_col[2], container_col[3], alpha)
-            render.rec(x, y, tw + pad * 2, 2, 6, 142, 165, 255, 180 * fade)
+            render.rec(x, y, tw + pad * 2, th + pad * 2, 6, { container_col[1], container_col[2], container_col[3], alpha })
+            render.rec(x, y, tw + pad * 2, 2, 6, { 142, 165, 255, 180 * fade })
             render.text(x + pad, y + pad, 255, 255, 255, 235 * fade, '-', 0, log.text)
 
             y_offset = y_offset + th + pad * 2 + 4
@@ -2360,13 +2360,13 @@ screen_indication.handle = function()
 
 	anim.name = {}
 	anim.name.alpha = animations.new('lua_name_alpha', indication_enable and 255 or 0)
-	anim.name.move = animations.new('binds_move_name', indication_enable and not scope_based and -render.measure_text('-', 'nightcore')*0.5 or 15)
+	anim.name.move = animations.new('binds_move_name', indication_enable and not scope_based and -render.measure_text(nil, 'nightcore')*0.5 or 15)
     anim.name.glow = animations.new('glow_name_alpha', (indication_enable and Vars.Misc.screen_indicators_settings.glow:get()) and 50 or 0)
 	if anim.name.alpha > 1 then
 		if anim.name.glow > 1 then
-			render.shadow(center[1]+1 + anim.name.move, center[2]+7, render.measure_text('-', 'nightcore')-1, 0, 10, 0, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow}, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow})
+			render.shadow(center[1]+1 + anim.name.move, center[2]+7, render.measure_text(nil, 'nightcore')-1, 0, 10, 0, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow}, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow})
 		end
-		render.text(center[1] + string.format('%.0f', anim.name.move), center[2], 255, 255, 255, anim.main, '-', 0, utils.animate_text(globals.curtime()*2, 'nightcore', accent_color[1], accent_color[2], accent_color[3], anim.main, accent_color[1], accent_color[2], accent_color[3], 150*(anim.main/255)))
+		render.text(center[1] + string.format('%.0f', anim.name.move), center[2], 255, 255, 255, anim.main, nil, 0, utils.animate_text(globals.curtime()*2, 'nightcore', accent_color[1], accent_color[2], accent_color[3], anim.main, accent_color[1], accent_color[2], accent_color[3], 150*(anim.main/255)))
 		add_y = add_y + string.format('%.0f', anim.name.alpha / 255 * 12)
 	end
 
