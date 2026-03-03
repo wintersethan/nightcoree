@@ -49,7 +49,17 @@ local antiaim_funcs = try_require('gamesense/antiaim_funcs', 'Download anti-aim 
 local c_entity = try_require('gamesense/entity', 'Download entity library: https://gamesense.pub/forums/viewtopic.php?id=27529')
 local http = try_require('gamesense/http', 'Download HTTP library: https://gamesense.pub/forums/viewtopic.php?id=21619')
 local clipboard = try_require('gamesense/clipboard', 'Download clipboard library: https://gamesense.pub/forums/viewtopic.php?id=28678')
-local base64 = try_require('gamesense/base64', 'Module base64 not found')
+
+-- base64 is optional: if library is missing, fall back to no-op encoder/decoder
+local ok_base64, base64_mod = pcall(require, 'gamesense/base64')
+local base64 = ok_base64 and base64_mod or {
+    encode = function(x) return x end,
+    decode = function(x) return x end
+}
+
+-- intro splash timing (big "nightcore" text on load)
+local intro_start_time = globals.realtime()
+local intro_duration = 2 -- seconds the intro is visible
 
 local dirs = {
 	execute = function (t, path, func)
@@ -1182,7 +1192,6 @@ img.eva = {
 if not files.exist(img.eva.path) then
 	http.get(img.eva.url, function(success, response)
 		if not success or response.status ~= 200 then
-			print("Missing 'eva_img' link")
             return
 		end
 
@@ -1256,17 +1265,11 @@ local Vars = {
 		_DEBUG and {
 			move = group:checkbox('Crosshair  »  Move with scope'),
 			hit_color = group:label('Crosshair  »  Hit color', { 142, 165, 255 }),
-			miss_color = group:label('Crosshair  »  Miss color', { 255, 180, 0 }),	
+			miss_color = group:label('Crosshair  »  Miss color', { 255, 180, 0 }),
+			container_color = group:label('Crosshair  »  Container color', { 18, 20, 26, 185 }),
 		} or nil,
 
 		hitlog_console = _DEBUG and group:checkbox('•  Console logger') or nil,
-		hitlogger_settings = 
-		_DEBUG and {
-			prefix_color = group:label('Console  »  Prefix color', { 142, 165, 255 }),
-			hit_color = group:label('Console  »  Hit color', { 159, 202, 43 }),
-			miss_color = group:label('Console  »  Miss color', { 255, 180, 0 }),	
-			container_color = group:label('Console  »  Container color', { 18, 20, 26, 185 }),
-		} or nil,
 
 		group:label(' '),
 		group:label('[\vnightcore\r] Miscellaneous'),
@@ -1476,13 +1479,8 @@ Vars.Home.load:set_callback(function()
     if name == '' then return end
 
     local s, p = pcall(config_system.load, name)
-
-    if s then
-        name = name:gsub('*', '')
-        print('Successfully loaded ' .. name)
-    else
-        print('Failed to load ' .. name)
-		print('Debug: ', p)
+    if not s then
+        return
     end
 	
 end)
@@ -1499,7 +1497,6 @@ Vars.Home.save:set_callback(function()
 	end
 
 	if name:match('[^%w]') ~= nil then
-		print('Failed to save ' .. name .. ' due to invalid characters')
 		return
 	end
 
@@ -1508,11 +1505,7 @@ Vars.Home.save:set_callback(function()
 		Vars.Home.list:update(config_system.config_list())
 	end
 
-	if pcall(protected) then
-		print('Successfully saved ' .. name)
-	else
-		print('Failed to save ' .. name)
-	end
+	pcall(protected)
 end)
 
 Vars.Home.delete:set_callback(function()
@@ -1520,7 +1513,6 @@ Vars.Home.delete:set_callback(function()
     if name == '' then return end
 
     if config_system.delete(name) == false then
-        print('Failed to delete ' .. name)
         Vars.Home.list:update(config_system.config_list())
         return
     end
@@ -1537,7 +1529,6 @@ Vars.Home.delete:set_callback(function()
     Vars.Home.list:update(config_system.config_list())
     Vars.Home.list:set((#presets) or '')
     Vars.Home.name:set(#database.read(protected.database.configs) == 0 and "" or config_system.config_list()[#presets])
-    print('Successfully deleted ' .. name)
 end)
 
 Vars.Home.import:set_callback(function()
@@ -1545,11 +1536,7 @@ Vars.Home.import:set_callback(function()
         config_system.import_settings()
     end
 
-    if pcall(protected) then
-        print('Successfully imported settings')
-    else
-        print('Failed to import settings')
-    end
+    pcall(protected)
 end)
 
 Vars.Home.export:set_callback(function()
@@ -1560,11 +1547,7 @@ Vars.Home.export:set_callback(function()
         config_system.export_settings(name)
     end
 
-    if pcall(protected) then
-        print('Successfully exported settings')
-    else
-        print('Failed to export settings')
-    end
+    pcall(protected)
 end)
 
 local function initDatabase()
@@ -1576,7 +1559,6 @@ local function initDatabase()
 
     http.get(link, function(success, response)
         if not success then
-            print('Failed to get presets')
             return
         end
 
@@ -1688,11 +1670,6 @@ local safecall = function(name, report, f)
 
         if not s then
             local retmessage = "safe call failed [" .. name .. "] -> " .. ret
-
-            if report then
-                print(retmessage)
-            end
-
             return false, retmessage
         else
             return ret, s
@@ -1867,51 +1844,9 @@ shot_logger.add = function(...)
         client.color_log(r, g, b, piece)
     end
 
-    shot_logger.logs = shot_logger.logs or {}
-    table.insert(shot_logger.logs, 1, {
-        text = table.concat(line_text),
-        time = globals.realtime()
-    })
-
-    if #shot_logger.logs > 7 then
-        table.remove(shot_logger.logs)
-    end
 end
 
-shot_logger.render = function()
-    if not (Vars.Misc.hitlog_console and Vars.Misc.hitlog_console:get()) then
-        return
-    end
-
-    shot_logger.logs = shot_logger.logs or {}
-
-    local container_col = { Vars.Misc.hitlogger_settings.container_color.color:get() }
-    local now = globals.realtime()
-    local sx, sy = client.screen_size()
-    local y_offset = 0
-
-    for i = #shot_logger.logs, 1, -1 do
-        local log = shot_logger.logs[i]
-        local elapsed = now - log.time
-
-        if elapsed > 4 then
-            table.remove(shot_logger.logs, i)
-        else
-            local fade = math.min(1, math.max(0, 1 - elapsed / 4))
-            local tw, th = render.measure_text('-', log.text)
-            local pad = 6
-            local x = sx * 0.5 - (tw + pad * 2) * 0.5
-            local y = sy * 0.62 + y_offset
-            local alpha = (container_col[4] or 185) * fade
-
-            render.rec(x, y, tw + pad * 2, th + pad * 2, 6, { container_col[1], container_col[2], container_col[3], alpha })
-            render.rec(x, y, tw + pad * 2, 2, 6, { 142, 165, 255, 180 * fade })
-            render.text(x + pad, y + pad, 255, 255, 255, 235 * fade, '-', 0, log.text)
-
-            y_offset = y_offset + th + pad * 2 + 4
-        end
-    end
-end
+shot_logger.render = function() end
 
 shot_logger.bullet_impacts = {}
 shot_logger.bullet_impact = function(e)
@@ -2016,8 +1951,8 @@ shot_logger.on_aim_hit = function(e)
 	local info = 
 	{
 		type = math.max(0, entity.get_prop(e.target, 'm_iHealth')) > 0,
-		prefix = { Vars.Misc.hitlogger_settings.prefix_color.color:get() },
-		hit = { Vars.Misc.hitlogger_settings.hit_color.color:get() },
+		prefix = { 142, 165, 255 },
+		hit = { 159, 202, 43 },
 		name = entity.get_player_name(e.target),
 		hitgroup = shot_logger.hitboxes[e.hitgroup + 1] or '?',
 		flags = string.format('%s', table.concat(shot_logger.generate_flags(shot_logger[e.id]))),
@@ -2058,8 +1993,8 @@ shot_logger.on_aim_miss = function(e)
 	local me = entity.get_local_player()
 	local info = 
 	{
-		prefix = {Vars.Misc.hitlogger_settings.prefix_color.color:get()},
-		hit = {Vars.Misc.hitlogger_settings.miss_color.color:get()},
+		prefix = { 142, 165, 255 },
+		hit = { 255, 180, 0 },
 		name = entity.get_player_name(e.target),
 		hitgroup = shot_logger.hitboxes[e.hitgroup + 1] or '?',
 		flags = string.format('%s', table.concat(shot_logger.generate_flags(shot_logger[e.id]))),
@@ -2374,9 +2309,9 @@ screen_indication.handle = function()
 	anim.state.text = conds[conditional_antiaims.get_active_idx(conditional_antiaims.player_state)]
     anim.state.alpha = animations.new('state_alpha', indication_enable and 200 or 0)
 	anim.state.scoped_check = animations.new('scoped_check', indication_enable and not scope_based and 1 or 0) ~= 1
-	anim.state.move = anim.state.scoped_check and string.format('%.0f',animations.new('binds_move_state', indication_enable and not scope_based and -render.measure_text('-', anim.state.text)*0.5 or 15)) or -render.measure_text('-', anim.state.text)*0.5
+	anim.state.move = anim.state.scoped_check and string.format('%.0f',animations.new('binds_move_state', indication_enable and not scope_based and -render.measure_text(nil, anim.state.text)*0.5 or 15)) or -render.measure_text(nil, anim.state.text)*0.5
 	if anim.state.alpha > 1 then
-		render.text(center[1] + anim.state.move, center[2] + add_y, 255, 255, 255, anim.state.alpha, '-', 0, anim.state.text)
+		render.text(center[1] + anim.state.move, center[2] + add_y, 255, 255, 255, anim.state.alpha, nil, 0, anim.state.text)
         add_y = add_y + string.format('%.0f', anim.state.alpha / 255 * 15)
     end
 
@@ -2385,10 +2320,10 @@ screen_indication.handle = function()
 
         anim.binds[v[1]] = {}
         anim.binds[v[1]].alpha = animations.new('binds_alpha_'..v[1], indication_enable and v[2] and 255 or 0)
-        anim.binds[v[1]].move = animations.new('binds_move_'..v[1], indication_enable and not scope_based and -render.measure_text('-', v[1])*0.5 or 15)
+        anim.binds[v[1]].move = animations.new('binds_move_'..v[1], indication_enable and not scope_based and -render.measure_text(nil, v[1])*0.5 or 15)
 
         if anim.binds[v[1]].alpha > 1 then 
-            render.text(center[1] + string.format('%.0f', anim.binds[v[1]].move), center[2] + add_y, 255, 255, 255, anim.binds[v[1]].alpha, '-', 0, v[1])
+            render.text(center[1] + string.format('%.0f', anim.binds[v[1]].move), center[2] + add_y, 255, 255, 255, anim.binds[v[1]].alpha, nil, 0, v[1])
 			add_y = add_y + string.format('%.0f', anim.binds[v[1]].alpha / 255 * 12)
         end
     end
@@ -2425,6 +2360,12 @@ crosshair_logger.handle = function()
         local alpha = 1 - math.abs(value.alpha)
         local base_color = { value.color[1], value.color[2], value.color[3], value.color[4] * alpha }
 
+        local container_col = { 18, 20, 26, 185 }
+        if Vars.Misc.crosshair_settings and Vars.Misc.crosshair_settings.container_color then
+            container_col = { Vars.Misc.crosshair_settings.container_color.color:get() }
+        end
+        local container_alpha = (container_col[4] or 185) * alpha
+
         local base_hex = '\a' .. utils.rgb_to_hex(base_color)
         local alternative = '\a' .. utils.rgb_to_hex({255, 255, 255, 200 * alpha})
         local string = alternative
@@ -2438,11 +2379,33 @@ crosshair_logger.handle = function()
         end
 
 		local text_sz = { render.measure_text('cd', fullstr) }
-        local x, y = center[1] + ((text_sz[1]*0.5+12)*crosshair_logger.move), center[2] + crosshair_logger.indicators_height
-		render.text(x, y, 255, 255, 255, 200 * alpha, 'cd', 0, string)
 
-        local height = text_sz[2] + 1
-        height = height * alpha
+        local pad_x, pad_y = 10, 5
+        local container_w = text_sz[1] + pad_x * 2
+        local container_h = text_sz[2] + pad_y * 2
+        
+        -- center container strictly on screen (без смещения от move)
+        local base_x = center[1]
+        local x, y = base_x, center[2] + crosshair_logger.indicators_height + 36
+
+        local container_x = x - container_w * 0.5
+        local container_y = y - pad_y
+
+        render.rec(
+            container_x,
+            container_y,
+            container_w,
+            container_h,
+            6,
+            { container_col[1], container_col[2], container_col[3], container_alpha }
+        )
+
+        -- centered text inside container
+        local text_x = container_x + container_w * 0.5 - text_sz[1] * 0.5
+
+		render.text(text_x, y, 255, 255, 255, 200 * alpha, 'cd', 0, string)
+
+        local height = (container_h + 3) * alpha
         center[2] = center[2] + height
 		
         if (globals.realtime() - value.time > 0) or (key > 4) then
@@ -3474,6 +3437,47 @@ antiaim_on_use.handle = function(cmd)
 
 end
 
+-- intro splash: large "nightcore" text on script load
+local intro_logo = {}
+
+intro_logo.handle = function()
+    -- show only for a limited time after script load
+    local now = globals.realtime()
+    local t = now - (intro_start_time or 0)
+    if t < 0 or t > intro_duration then
+        return
+    end
+
+    local screen_x, screen_y = client.screen_size()
+    local center_x, center_y = screen_x * 0.5, screen_y * 0.5
+
+    -- simple fade in/out for the whole intro
+    local fade_in_time, fade_out_time = 0.5, 0.6
+    local alpha_mul = 1
+
+    if t < fade_in_time then
+        alpha_mul = t / fade_in_time
+    elseif t > (intro_duration - fade_out_time) then
+        alpha_mul = math.max(0, (intro_duration - t) / fade_out_time)
+    end
+
+    local alpha = math.floor(255 * math.clamp(alpha_mul, 0, 1))
+    if alpha < 1 then
+        return
+    end
+
+    local text = 'nightcore'
+    local text_w, text_h = render.measure_text('cb', text)
+
+    -- center text exactly on screen
+    local text_x = center_x - text_w * 0.5
+    local text_y = center_y - text_h * 0.5
+
+    -- shadow for text
+    render.text(text_x + 2, text_y + 2, 0, 0, 0, alpha, 'cb', 0, text)
+    render.text(text_x, text_y, 255, 255, 255, alpha, 'cb', 0, text)
+end
+
 widgets.branded_watermark = {}
 
 widgets.branded_watermark.handle = function()
@@ -3637,11 +3641,7 @@ if Vars.Misc.crosshair_settings then
 	end
 end
 
-if Vars.Misc.hitlog_console then
-	for k, v in pairs(Vars.Misc.hitlogger_settings) do
-		v:depend({Vars.Misc.hitlog_console, true})
-	end
-end
+-- hitlog_console no longer has extra sliders, just a single checkbox
 
 for k, v in pairs(Vars.AA.manuals) do
     Vars.AA.manuals.left:depend({Vars.AA.manuals.enable, true})
@@ -3683,6 +3683,7 @@ client.set_event_callback('pre_render', function()
 	utils.hide_aa_tab(true)
 end)
 client.set_event_callback('setup_command', aero_lag_exp.handle)
+client.set_event_callback('paint', intro_logo.handle)
 client.set_event_callback('paint', crosshair_logger.handle)
 client.set_event_callback('paint', screen_indication.handle)
 client.set_event_callback('paint', shot_logger.render)
