@@ -1265,6 +1265,7 @@ local Vars = {
 			prefix_color = group:label('Console  »  Prefix color', { 142, 165, 255 }),
 			hit_color = group:label('Console  »  Hit color', { 159, 202, 43 }),
 			miss_color = group:label('Console  »  Miss color', { 255, 180, 0 }),	
+			container_color = group:label('Console  »  Container color', { 18, 20, 26, 185 }),
 		} or nil,
 
 		group:label(' '),
@@ -1839,28 +1840,76 @@ model_breaker.handle_jitter = safecall('model_breaker.handle_jitter', true, func
 end)
 
 shot_logger.add = function(...)
-    args = { ... }
-    len = #args
-    for i = 1, len do
-        arg = args[i]
-        r, g, b = unpack(arg)
+    local args = { ... }
+    local len = #args
+    local line_text = {}
 
-        msg = {}
+    for i = 1, len do
+        local arg = args[i]
+        local r, g, b = unpack(arg)
+        local msg = {}
 
         if #arg == 3 then
             table.insert(msg, " ")
         else
-            for i = 4, #arg do
-                table.insert(msg, arg[i])
+            for text_idx = 4, #arg do
+                table.insert(msg, tostring(arg[text_idx]))
             end
         end
-        msg = table.concat(msg)
+
+        local piece = table.concat(msg)
+        table.insert(line_text, piece)
 
         if len > i then
-            msg = msg .. "\0"
+            piece = piece .. "\0"
         end
 
-        client.color_log(r, g, b, msg)
+        client.color_log(r, g, b, piece)
+    end
+
+    shot_logger.logs = shot_logger.logs or {}
+    table.insert(shot_logger.logs, 1, {
+        text = table.concat(line_text),
+        time = globals.realtime()
+    })
+
+    if #shot_logger.logs > 7 then
+        table.remove(shot_logger.logs)
+    end
+end
+
+shot_logger.render = function()
+    if not (Vars.Misc.hitlog_console and Vars.Misc.hitlog_console:get()) then
+        return
+    end
+
+    shot_logger.logs = shot_logger.logs or {}
+
+    local container_col = { Vars.Misc.hitlogger_settings.container_color.color:get() }
+    local now = globals.realtime()
+    local sx, sy = client.screen_size()
+    local y_offset = 0
+
+    for i = #shot_logger.logs, 1, -1 do
+        local log = shot_logger.logs[i]
+        local elapsed = now - log.time
+
+        if elapsed > 4 then
+            table.remove(shot_logger.logs, i)
+        else
+            local fade = math.min(1, math.max(0, 1 - elapsed / 4))
+            local tw, th = render.measure_text('-', log.text)
+            local pad = 6
+            local x = sx * 0.5 - (tw + pad * 2) * 0.5
+            local y = sy * 0.62 + y_offset
+            local alpha = (container_col[4] or 185) * fade
+
+            render.rec(x, y, tw + pad * 2, th + pad * 2, 6, container_col[1], container_col[2], container_col[3], alpha)
+            render.rec(x, y, tw + pad * 2, 2, 6, 142, 165, 255, 180 * fade)
+            render.text(x + pad, y + pad, 255, 255, 255, 235 * fade, '-', 0, log.text)
+
+            y_offset = y_offset + th + pad * 2 + 4
+        end
     end
 end
 
@@ -2311,13 +2360,13 @@ screen_indication.handle = function()
 
 	anim.name = {}
 	anim.name.alpha = animations.new('lua_name_alpha', indication_enable and 255 or 0)
-	anim.name.move = animations.new('binds_move_name', indication_enable and not scope_based and -render.measure_text(nil, 'nightcore')*0.5 or 15)
+	anim.name.move = animations.new('binds_move_name', indication_enable and not scope_based and -render.measure_text('-', 'nightcore')*0.5 or 15)
     anim.name.glow = animations.new('glow_name_alpha', (indication_enable and Vars.Misc.screen_indicators_settings.glow:get()) and 50 or 0)
 	if anim.name.alpha > 1 then
 		if anim.name.glow > 1 then
-			render.shadow(center[1]+1 + anim.name.move, center[2]+7, render.measure_text('b', 'nightcore')-1, 0, 10, 0, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow}, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow})
+			render.shadow(center[1]+1 + anim.name.move, center[2]+7, render.measure_text('-', 'nightcore')-1, 0, 10, 0, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow}, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow})
 		end
-		render.text(center[1] + string.format('%.0f', anim.name.move), center[2], 255, 255, 255, anim.main, 'b', 0, utils.animate_text(globals.curtime()*2, 'nightcore', accent_color[1], accent_color[2], accent_color[3], anim.main, accent_color[1], accent_color[2], accent_color[3], 150*(anim.main/255)))
+		render.text(center[1] + string.format('%.0f', anim.name.move), center[2], 255, 255, 255, anim.main, '-', 0, utils.animate_text(globals.curtime()*2, 'nightcore', accent_color[1], accent_color[2], accent_color[3], anim.main, accent_color[1], accent_color[2], accent_color[3], 150*(anim.main/255)))
 		add_y = add_y + string.format('%.0f', anim.name.alpha / 255 * 12)
 	end
 
@@ -2325,9 +2374,9 @@ screen_indication.handle = function()
 	anim.state.text = conds[conditional_antiaims.get_active_idx(conditional_antiaims.player_state)]
     anim.state.alpha = animations.new('state_alpha', indication_enable and 200 or 0)
 	anim.state.scoped_check = animations.new('scoped_check', indication_enable and not scope_based and 1 or 0) ~= 1
-	anim.state.move = anim.state.scoped_check and string.format('%.0f',animations.new('binds_move_state', indication_enable and not scope_based and -render.measure_text(nil, anim.state.text)*0.5 or 15)) or -render.measure_text(nil, anim.state.text)*0.5
+	anim.state.move = anim.state.scoped_check and string.format('%.0f',animations.new('binds_move_state', indication_enable and not scope_based and -render.measure_text('-', anim.state.text)*0.5 or 15)) or -render.measure_text('-', anim.state.text)*0.5
 	if anim.state.alpha > 1 then
-		render.text(center[1] + anim.state.move, center[2] + add_y, 255, 255, 255, anim.state.alpha, nil, 0, anim.state.text)
+		render.text(center[1] + anim.state.move, center[2] + add_y, 255, 255, 255, anim.state.alpha, '-', 0, anim.state.text)
         add_y = add_y + string.format('%.0f', anim.state.alpha / 255 * 15)
     end
 
@@ -2336,10 +2385,10 @@ screen_indication.handle = function()
 
         anim.binds[v[1]] = {}
         anim.binds[v[1]].alpha = animations.new('binds_alpha_'..v[1], indication_enable and v[2] and 255 or 0)
-        anim.binds[v[1]].move = animations.new('binds_move_'..v[1], indication_enable and not scope_based and -render.measure_text(nil, v[1])*0.5 or 15)
+        anim.binds[v[1]].move = animations.new('binds_move_'..v[1], indication_enable and not scope_based and -render.measure_text('-', v[1])*0.5 or 15)
 
         if anim.binds[v[1]].alpha > 1 then 
-            render.text(center[1] + string.format('%.0f', anim.binds[v[1]].move), center[2] + add_y, 255, 255, 255, anim.binds[v[1]].alpha, nil, 0, v[1])
+            render.text(center[1] + string.format('%.0f', anim.binds[v[1]].move), center[2] + add_y, 255, 255, 255, anim.binds[v[1]].alpha, '-', 0, v[1])
 			add_y = add_y + string.format('%.0f', anim.binds[v[1]].alpha / 255 * 12)
         end
     end
@@ -3636,6 +3685,7 @@ end)
 client.set_event_callback('setup_command', aero_lag_exp.handle)
 client.set_event_callback('paint', crosshair_logger.handle)
 client.set_event_callback('paint', screen_indication.handle)
+client.set_event_callback('paint', shot_logger.render)
 client.set_event_callback('paint', manual_indication.handle)
 client.set_event_callback('setup_command', manual_indication.peeking_whom)
 client.set_event_callback('pre_render', model_breaker.handle)
@@ -3662,6 +3712,7 @@ client.set_event_callback('setup_command', function(cmd)
 	conditional_antiaims.handle(cmd)
 	antiaim_on_use.handle(cmd)
 end)
+
 --local variables for API.
 local client_latency, client_set_clan_tag, client_set_event_callback =
     client.latency, client.set_clan_tag, client.set_event_callback
