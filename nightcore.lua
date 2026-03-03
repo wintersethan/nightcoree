@@ -1270,6 +1270,13 @@ local Vars = {
 		} or nil,
 
 		hitlog_console = _DEBUG and group:checkbox('•  Console logger') or nil,
+		hitlogger_settings = 
+		_DEBUG and {
+			prefix_color = group:label('Console  »  Prefix color', { 142, 165, 255 }),
+			hit_color = group:label('Console  »  Hit color', { 159, 202, 43 }),
+			miss_color = group:label('Console  »  Miss color', { 255, 180, 0 }),	
+			container_color = group:label('Console  »  Container color', { 18, 20, 26, 185 }),
+		} or nil,
 
 		group:label(' '),
 		group:label('[\vnightcore\r] Miscellaneous'),
@@ -1842,6 +1849,55 @@ shot_logger.add = function(...)
         end
 
         client.color_log(r, g, b, piece)
+    end
+
+    shot_logger.logs = shot_logger.logs or {}
+    table.insert(shot_logger.logs, 1, {
+        text = table.concat(line_text),
+        time = globals.realtime()
+    })
+
+    if #shot_logger.logs > 7 then
+        table.remove(shot_logger.logs)
+    end
+end
+
+shot_logger.render = function()
+    if not (Vars.Misc.hitlog_console and Vars.Misc.hitlog_console:get()) then
+        return
+    end
+
+    shot_logger.logs = shot_logger.logs or {}
+
+    local container_col = { Vars.Misc.hitlogger_settings.container_color.color:get() }
+    local now = globals.realtime()
+    local sx, sy = client.screen_size()
+    local y_offset = 0
+
+    for i = #shot_logger.logs, 1, -1 do
+        local log = shot_logger.logs[i]
+        local elapsed = now - log.time
+
+        if elapsed > 4 then
+            table.remove(shot_logger.logs, i)
+        else
+            local fade = math.min(1, math.max(0, 1 - elapsed / 4))
+            local tw, th = render.measure_text(nil, log.text)
+            local pad = 6
+            local container_w = tw + pad * 2
+            local container_h = th + pad * 2
+            local cx = sx * 0.5
+            local x = cx - container_w * 0.5
+            local y = sy * 0.62 + y_offset
+            local alpha = (container_col[4] or 185) * fade
+
+            render.rec(x, y, container_w, container_h, 6, { container_col[1], container_col[2], container_col[3], alpha })
+            render.rec(x, y, container_w, 2, 6, { 142, 165, 255, 180 * fade })
+            render.text(cx, y + pad, 255, 255, 255, 235 * fade, 'c', 0, log.text)
+
+            y_offset = y_offset + container_h + 4
+        end
+    
     end
 
 end
