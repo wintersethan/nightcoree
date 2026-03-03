@@ -1,4 +1,4 @@
-local fromdb = {username = 'cracked by aonari xd'} -- creds to electus
+local fromdb = {username = 'nightcore'} -- creds to electus
 
 local _DEBUG = true
 
@@ -1176,7 +1176,7 @@ end
 
 img.eva = {
     url = 'https://cdn.discordapp.com/attachments/1104685787414540329/1124655981465456650/eva_img.png',
-    path = 'crackedwings_eva_img.png'
+    path = 'nightcore_eva_img.png'
 }
 
 if not files.exist(img.eva.path) then
@@ -1191,24 +1191,24 @@ if not files.exist(img.eva.path) then
 end
 
 protected.database = {
-	configs = ':crackedwings::configs:'
+	configs = ':nightcore::configs:'
 }
 
 local information = { user = database.read('angelbase_wtf^^') ~= nil and database.read('angelbase_wtf^^').username or fromdb.username, version = _DEBUG and 'debug' or 'live' }
 local group = ui_handler.group('AA', 'Anti-aimbot angles')
 
 
-local tab = group:combobox('\vcrackedwings\r ~ ' .. information.version, {'Home', 'Misc', 'AA'})
+local tab = group:combobox('\vnightcore\r ~ ' .. information.version, {'Home', 'Misc', 'AA'})
 group:label(' ')
 
 conditional_antiaims.conditions_names = {'Shared', 'Standing', 'Moving', 'Slowwalk', 'Crouch', 'Moving & Crouch', 'Air', 'Air & Crouch', 'Freestand', 'Fakelag', 'On Use'}
 local Vars = {
     Home = {
-		group:label('[\vcrackedwings\r] Information'),
-		group:label('User: \v' .. information.user),
+		group:label('[\vnightcore\r] Information'),
+		group:label('user:dev'),
 		group:label('Version: \v0.1'),
 		group:label(' '),
-		group:label('[\vcrackedwings\r] Presets'),
+		group:label('[\vnightcore\r] Presets'),
 
 		list = group:listbox('Configs', '', false),
 		name = group:textbox('Config name', '', false),
@@ -1220,7 +1220,7 @@ local Vars = {
     },
 
     Misc = {
-		group:label('[\vcrackedwings\r] Visuals'),
+		group:label('[\vnightcore\r] Visuals'),
 		screen_indicators = group:checkbox('•  Screen indicators', { 142, 165, 255 }),
 		screen_indicators_settings = {
 			glow = group:checkbox('Indicators  »  Glow behind')
@@ -1268,7 +1268,7 @@ local Vars = {
 		} or nil,
 
 		group:label(' '),
-		group:label('[\vcrackedwings\r] Miscellaneous'),
+		group:label('[\vnightcore\r] Miscellaneous'),
 		fast_ladder = group:checkbox('•  Fast ladder'),
 		fast_ladder_settings = {
 			group:multiselect('Fast ladder  »  Settings' , {'Ascending', 'Descending'})
@@ -1285,7 +1285,7 @@ local Vars = {
     },
 
     AA = {
-		group:label('[\vcrackedwings\r] Settings'),
+		group:label('[\vnightcore\r] Settings'),
 		enable = group:checkbox('•  Enable anti-aims'),
 		edge_yaw = group:checkbox('•  Edge yaw', 0x00),
 		freestanding = group:checkbox('•  Freestanding', 0x00),
@@ -1326,7 +1326,7 @@ local Vars = {
 
 		empty_list = group:label(' '),
 		Settings = {
-			group:label('[\vcrackedwings\r] Builder'),
+			group:label('[\vnightcore\r] Builder'),
 			condition_combo = group:combobox('State', conditional_antiaims.conditions_names)
 		}
     }	
@@ -1979,7 +1979,7 @@ shot_logger.on_aim_hit = function(e)
 		correction = string.format('%d:%d°', shot_logger[e.id].correction and 1 or 0, (shot_logger[e.id].feet_yaw < 10 and shot_logger[e.id].feet_yaw > -10) and 0 or shot_logger[e.id].feet_yaw)
 	}
 
-	shot_logger.add({ info.prefix[1], info.prefix[2], info.prefix[3], '[crackedwings]'}, 
+	shot_logger.add({ info.prefix[1], info.prefix[2], info.prefix[3], '[nightcore]'},
 					{ 134, 134, 134, ' » ' }, 
 					{ 200, 200, 200, info.type and 'Damaged ' or 'Killed ' }, 
 					{ info.hit[1], info.hit[2], info.hit[3],  info.name }, 
@@ -2030,7 +2030,7 @@ shot_logger.on_aim_miss = function(e)
         end
     end
 
-	shot_logger.add({ info.prefix[1], info.prefix[2], info.prefix[3], '[crackedwings]'}, 
+	shot_logger.add({ info.prefix[1], info.prefix[2], info.prefix[3], '[nightcore]'},
 					{ 134, 134, 134, ' » ' }, 
 					{ 200, 200, 200, 'Missed shot at ' }, 
 					{ info.hit[1], info.hit[2], info.hit[3],  info.name }, 
@@ -2264,7 +2264,7 @@ screen_indication.handle = function()
 		if Vars.Misc.alt_watermark.value == "Modern" then
 			screen_indication.luasense(255)
 		else
-			render.text(center[1], y - 15, 255, 255, 255, 200, 'cb', 0, 'crackedwings')
+			render.text(center[1], y - 15, 255, 255, 255, 200, 'cb', 0, 'nightcore')
 		end
 	end
 
@@ -2311,13 +2311,13 @@ screen_indication.handle = function()
 
 	anim.name = {}
 	anim.name.alpha = animations.new('lua_name_alpha', indication_enable and 255 or 0)
-	anim.name.move = animations.new('binds_move_name', indication_enable and not scope_based and -render.measure_text(nil, 'crackedwings')*0.5 or 15)
+	anim.name.move = animations.new('binds_move_name', indication_enable and not scope_based and -render.measure_text(nil, 'nightcore')*0.5 or 15)
     anim.name.glow = animations.new('glow_name_alpha', (indication_enable and Vars.Misc.screen_indicators_settings.glow:get()) and 50 or 0)
 	if anim.name.alpha > 1 then
 		if anim.name.glow > 1 then
-			render.shadow(center[1]+1 + anim.name.move, center[2]+7, render.measure_text('b', 'crackedwings')-1, 0, 10, 0, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow}, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow})
+			render.shadow(center[1]+1 + anim.name.move, center[2]+7, render.measure_text('b', 'nightcore')-1, 0, 10, 0, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow}, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow})
 		end
-		render.text(center[1] + string.format('%.0f', anim.name.move), center[2], 255, 255, 255, anim.main, 'b', 0, utils.animate_text(globals.curtime()*2, 'crackedwings', accent_color[1], accent_color[2], accent_color[3], anim.main, accent_color[1], accent_color[2], accent_color[3], 150*(anim.main/255)))
+		render.text(center[1] + string.format('%.0f', anim.name.move), center[2], 255, 255, 255, anim.main, 'b', 0, utils.animate_text(globals.curtime()*2, 'nightcore', accent_color[1], accent_color[2], accent_color[3], anim.main, accent_color[1], accent_color[2], accent_color[3], 150*(anim.main/255)))
 		add_y = add_y + string.format('%.0f', anim.name.alpha / 255 * 12)
 	end
 
