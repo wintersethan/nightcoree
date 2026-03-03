@@ -3468,7 +3468,6 @@ widgets.branded_watermark.handle = function()
 	if anim < 1 then return end
 
 	local accent = { Vars.Misc.branded_watermark.color:get() }
-    local design_username = information.user
 
 	local x, y = client.screen_size()
 	local center = { x = x*0.5, y = y*0.5 }
@@ -3482,8 +3481,8 @@ widgets.branded_watermark.handle = function()
 	end
 
 	local text = { 
-		[1] = string.format('CRACKEDWINGS\a%s.PINK', utils.rgb_to_hex(design_accent_color)),
-		[2] = string.format('USER - %s [\a%s%s\a%s]', string.upper(design_username), utils.rgb_to_hex(design_accent_color), string.upper(information.version), utils.rgb_to_hex(white))
+		[1] = string.format('NIGHTCORE\a%s.PINK', utils.rgb_to_hex(design_accent_color)),
+		[2] = string.format('USER:DEV [\a%s%s\a%s]', utils.rgb_to_hex(design_accent_color), string.upper(information.version), utils.rgb_to_hex(white))
 	}
 	local measure = { render.measure_text('-', text[2]) }
 
