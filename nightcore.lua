@@ -1,4 +1,4 @@
-local fromdb = {username = 'cracked by aonari xd'} -- creds to electus
+local fromdb = {username = 'nightcore'} -- creds to electus
 
 local _DEBUG = true
 
@@ -1176,7 +1176,7 @@ end
 
 img.eva = {
     url = 'https://cdn.discordapp.com/attachments/1104685787414540329/1124655981465456650/eva_img.png',
-    path = 'crackedwings_eva_img.png'
+    path = 'nightcore_eva_img.png'
 }
 
 if not files.exist(img.eva.path) then
@@ -1191,24 +1191,24 @@ if not files.exist(img.eva.path) then
 end
 
 protected.database = {
-	configs = ':crackedwings::configs:'
+	configs = ':nightcore::configs:'
 }
 
 local information = { user = database.read('angelbase_wtf^^') ~= nil and database.read('angelbase_wtf^^').username or fromdb.username, version = _DEBUG and 'debug' or 'live' }
 local group = ui_handler.group('AA', 'Anti-aimbot angles')
 
 
-local tab = group:combobox('\vcrackedwings\r ~ ' .. information.version, {'Home', 'Misc', 'AA'})
+local tab = group:combobox('\vnightcore\r ~ ' .. information.version, {'Home', 'Misc', 'AA'})
 group:label(' ')
 
 conditional_antiaims.conditions_names = {'Shared', 'Standing', 'Moving', 'Slowwalk', 'Crouch', 'Moving & Crouch', 'Air', 'Air & Crouch', 'Freestand', 'Fakelag', 'On Use'}
 local Vars = {
     Home = {
-		group:label('[\vcrackedwings\r] Information'),
-		group:label('User: \v' .. information.user),
+		group:label('[\vnightcore\r] Information'),
+		group:label('user:dev'),
 		group:label('Version: \v0.1'),
 		group:label(' '),
-		group:label('[\vcrackedwings\r] Presets'),
+		group:label('[\vnightcore\r] Presets'),
 
 		list = group:listbox('Configs', '', false),
 		name = group:textbox('Config name', '', false),
@@ -1220,7 +1220,7 @@ local Vars = {
     },
 
     Misc = {
-		group:label('[\vcrackedwings\r] Visuals'),
+		group:label('[\vnightcore\r] Visuals'),
 		screen_indicators = group:checkbox('•  Screen indicators', { 142, 165, 255 }),
 		screen_indicators_settings = {
 			glow = group:checkbox('Indicators  »  Glow behind')
@@ -1268,7 +1268,7 @@ local Vars = {
 		} or nil,
 
 		group:label(' '),
-		group:label('[\vcrackedwings\r] Miscellaneous'),
+		group:label('[\vnightcore\r] Miscellaneous'),
 		fast_ladder = group:checkbox('•  Fast ladder'),
 		fast_ladder_settings = {
 			group:multiselect('Fast ladder  »  Settings' , {'Ascending', 'Descending'})
@@ -1285,7 +1285,7 @@ local Vars = {
     },
 
     AA = {
-		group:label('[\vcrackedwings\r] Settings'),
+		group:label('[\vnightcore\r] Settings'),
 		enable = group:checkbox('•  Enable anti-aims'),
 		edge_yaw = group:checkbox('•  Edge yaw', 0x00),
 		freestanding = group:checkbox('•  Freestanding', 0x00),
@@ -1326,7 +1326,7 @@ local Vars = {
 
 		empty_list = group:label(' '),
 		Settings = {
-			group:label('[\vcrackedwings\r] Builder'),
+			group:label('[\vnightcore\r] Builder'),
 			condition_combo = group:combobox('State', conditional_antiaims.conditions_names)
 		}
     }	
@@ -1979,7 +1979,7 @@ shot_logger.on_aim_hit = function(e)
 		correction = string.format('%d:%d°', shot_logger[e.id].correction and 1 or 0, (shot_logger[e.id].feet_yaw < 10 and shot_logger[e.id].feet_yaw > -10) and 0 or shot_logger[e.id].feet_yaw)
 	}
 
-	shot_logger.add({ info.prefix[1], info.prefix[2], info.prefix[3], '[crackedwings]'}, 
+	shot_logger.add({ info.prefix[1], info.prefix[2], info.prefix[3], '[nightcore]'},
 					{ 134, 134, 134, ' » ' }, 
 					{ 200, 200, 200, info.type and 'Damaged ' or 'Killed ' }, 
 					{ info.hit[1], info.hit[2], info.hit[3],  info.name }, 
@@ -2030,7 +2030,7 @@ shot_logger.on_aim_miss = function(e)
         end
     end
 
-	shot_logger.add({ info.prefix[1], info.prefix[2], info.prefix[3], '[crackedwings]'}, 
+	shot_logger.add({ info.prefix[1], info.prefix[2], info.prefix[3], '[nightcore]'},
 					{ 134, 134, 134, ' » ' }, 
 					{ 200, 200, 200, 'Missed shot at ' }, 
 					{ info.hit[1], info.hit[2], info.hit[3],  info.name }, 
@@ -2264,7 +2264,7 @@ screen_indication.handle = function()
 		if Vars.Misc.alt_watermark.value == "Modern" then
 			screen_indication.luasense(255)
 		else
-			render.text(center[1], y - 15, 255, 255, 255, 200, 'cb', 0, 'crackedwings')
+			render.text(center[1], y - 15, 255, 255, 255, 200, 'cb', 0, 'nightcore')
 		end
 	end
 
@@ -2311,13 +2311,13 @@ screen_indication.handle = function()
 
 	anim.name = {}
 	anim.name.alpha = animations.new('lua_name_alpha', indication_enable and 255 or 0)
-	anim.name.move = animations.new('binds_move_name', indication_enable and not scope_based and -render.measure_text(nil, 'crackedwings')*0.5 or 15)
+	anim.name.move = animations.new('binds_move_name', indication_enable and not scope_based and -render.measure_text(nil, 'nightcore')*0.5 or 15)
     anim.name.glow = animations.new('glow_name_alpha', (indication_enable and Vars.Misc.screen_indicators_settings.glow:get()) and 50 or 0)
 	if anim.name.alpha > 1 then
 		if anim.name.glow > 1 then
-			render.shadow(center[1]+1 + anim.name.move, center[2]+7, render.measure_text('b', 'crackedwings')-1, 0, 10, 0, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow}, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow})
+			render.shadow(center[1]+1 + anim.name.move, center[2]+7, render.measure_text('b', 'nightcore')-1, 0, 10, 0, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow}, {accent_color[1], accent_color[2], accent_color[3], anim.name.glow})
 		end
-		render.text(center[1] + string.format('%.0f', anim.name.move), center[2], 255, 255, 255, anim.main, 'b', 0, utils.animate_text(globals.curtime()*2, 'crackedwings', accent_color[1], accent_color[2], accent_color[3], anim.main, accent_color[1], accent_color[2], accent_color[3], 150*(anim.main/255)))
+		render.text(center[1] + string.format('%.0f', anim.name.move), center[2], 255, 255, 255, anim.main, 'b', 0, utils.animate_text(globals.curtime()*2, 'nightcore', accent_color[1], accent_color[2], accent_color[3], anim.main, accent_color[1], accent_color[2], accent_color[3], 150*(anim.main/255)))
 		add_y = add_y + string.format('%.0f', anim.name.alpha / 255 * 12)
 	end
 
@@ -3468,7 +3468,6 @@ widgets.branded_watermark.handle = function()
 	if anim < 1 then return end
 
 	local accent = { Vars.Misc.branded_watermark.color:get() }
-    local design_username = information.user
 
 	local x, y = client.screen_size()
 	local center = { x = x*0.5, y = y*0.5 }
@@ -3482,8 +3481,8 @@ widgets.branded_watermark.handle = function()
 	end
 
 	local text = { 
-		[1] = string.format('CRACKEDWINGS\a%s.PINK', utils.rgb_to_hex(design_accent_color)),
-		[2] = string.format('USER - %s [\a%s%s\a%s]', string.upper(design_username), utils.rgb_to_hex(design_accent_color), string.upper(information.version), utils.rgb_to_hex(white))
+		[1] = string.format('NIGHTCORE\a%s.PINK', utils.rgb_to_hex(design_accent_color)),
+		[2] = string.format('USER:DEV [\a%s%s\a%s]', utils.rgb_to_hex(design_accent_color), string.upper(information.version), utils.rgb_to_hex(white))
 	}
 	local measure = { render.measure_text('-', text[2]) }
 
@@ -3699,3 +3698,165 @@ client.set_event_callback('setup_command', function(cmd)
 	conditional_antiaims.handle(cmd)
 	antiaim_on_use.handle(cmd)
 end)
+
+--local variables for API.
+local client_latency, client_set_clan_tag, client_set_event_callback =
+    client.latency, client.set_clan_tag, client.set_event_callback
+
+local entity_get_all, entity_get_prop =
+    entity.get_all, entity.get_prop
+
+local globals_tickcount, globals_tickinterval =
+    globals.tickcount, globals.tickinterval
+
+local ui_new_combobox, ui_reference, ui_set_visible, ui_set_callback, ui_set, ui_get =
+    ui.new_combobox, ui.reference, ui.set_visible, ui.set_callback, ui.set, ui.get
+
+local math_floor = math.floor
+local string_sub = string.sub
+--end of local variables
+
+local function time_to_ticks(time)
+    return math_floor(time / globals_tickinterval() + 0.5)
+end
+
+-- настройки
+local skeet_tag_name = "nightcore"
+local tag_text = "nightcore"
+
+-- UI
+local enabled_reference = ui_new_combobox("MISC", "Miscellaneous", "Clan tag spammer", {"Off", "gamesense", skeet_tag_name})
+local default_reference = ui_reference("MISC", "Miscellaneous", "Clan tag spammer")
+ui_set_visible(default_reference, false)
+
+local function on_enabled_changed()
+    local enabled = ui_get(enabled_reference)
+    ui_set(default_reference, enabled == "gamesense")
+end
+ui_set_callback(enabled_reference, on_enabled_changed)
+on_enabled_changed()
+
+-- state
+local clan_tag_prev = ""
+local enabled_prev = "Off"
+local match_ended = false
+
+local function set_tag_once(tag)
+    if tag ~= clan_tag_prev then
+        client_set_clan_tag(tag)
+        clan_tag_prev = tag
+    end
+end
+
+local function clear_tag()
+    set_tag_once("\0")
+end
+
+-- проверка свапа команд (HALFTIME)
+local function is_switching_teams()
+    local gr = entity_get_all("CCSGameRulesProxy")[1]
+    if gr == nil then
+        return false
+    end
+
+    return entity_get_prop(gr, "m_bSwitchingTeams") == 1
+end
+
+local function is_static_now()
+    if match_ended then
+        return true
+    end
+
+    -- во время халфтайма (свапа сторон)
+    if is_switching_teams() then
+        return true
+    end
+
+    return false
+end
+
+-- animation (первый видимый кадр будет "an")
+local function gamesense_anim(text, indices)
+    local text_anim = "               " .. text .. "                      "
+    local tickcount = globals_tickcount() + time_to_ticks(client_latency())
+
+    local step = time_to_ticks(0.3)
+    if step <= 0 then step = 1 end
+
+    local idx = math_floor((tickcount / step) % #indices)
+    local i = indices[idx + 1] + 1
+
+    return string_sub(text_anim, i, i + 15)
+end
+
+local anim_indices = {
+    0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+    11, 11, 11, 11, 11, 11, 11,
+    12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22
+}
+
+local function run_tag_logic()
+    if ui_get(enabled_reference) ~= skeet_tag_name then
+        return
+    end
+
+    if is_static_now() then
+        set_tag_once(tag_text)
+        return
+    end
+
+    set_tag_once(gamesense_anim(tag_text, anim_indices))
+end
+
+local function handle_mode_switch()
+    local enabled = ui_get(enabled_reference)
+
+    if enabled ~= skeet_tag_name and enabled_prev == skeet_tag_name then
+        clear_tag()
+        match_ended = false
+    end
+
+    enabled_prev = enabled
+end
+
+local function on_paint()
+    handle_mode_switch()
+
+    if ui_get(enabled_reference) == skeet_tag_name then
+        if globals_tickcount() % 2 == 0 then
+            run_tag_logic()
+        end
+    end
+end
+client_set_event_callback("paint", on_paint)
+
+local function on_run_command(e)
+    if ui_get(enabled_reference) == skeet_tag_name then
+        if e.chokedcommands == 0 then
+            run_tag_logic()
+        end
+    end
+end
+client_set_event_callback("run_command", on_run_command)
+
+-- конец матча
+local function on_match_end()
+    if ui_get(enabled_reference) ~= skeet_tag_name then
+        return
+    end
+    match_ended = true
+    set_tag_once(tag_text)
+end
+
+local function on_round_start()
+    match_ended = false
+end
+
+client_set_event_callback("cs_win_panel_match", on_match_end)
+client_set_event_callback("game_end", on_match_end)
+client_set_event_callback("round_start", on_round_start)
+
+local function on_shutdown()
+    clear_tag()
+end
+client_set_event_callback("shutdown", on_shutdown)
